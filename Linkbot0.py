@@ -30,23 +30,24 @@ server = "dreamhack.se.quakenet.org"
 #server = "port80a.se.quakenet.org"
 channel = "#hightech"
 channel = "#linkbot0"
-nickname = "LinkBot0"
+nickname = "LinkBot1"
 
 q = Queue.Queue()
 
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 irc.settimeout(2)
 
-print "Connecting to " + server
-logging.info()
-
 irc.connect((server, 6667))
+
+logging.info("Connected to server %s", server)
 
 
 irc.send("USER " + nickname + " " + nickname + " " + nickname + " :Linkbot\n")
 irc.send("NICK " + nickname + "\n")
 irc.send("PRIVMSG nickserv :NOOPE\r\n")
 #irc.send("JOIN " + channel + "\n")
+
+logging.info("User and nicknames set")
 
 #print "Entering while loop"
 
@@ -77,7 +78,7 @@ while 1:
 		while not q.empty():
 			m = q.get()
 			print "sending message " + m.rstrip(os.linesep)
-			logging.info("Sending message: %s", m)
+			logging.info("Sending message: PRIVMSG %s :%s", channel, m)
 			#irc.send("PRIVMSG " + channel +" :"+ m.encode('utf8') +" \n")
 			irc.send("PRIVMSG " + channel +" :"+ m +" \n")
 
