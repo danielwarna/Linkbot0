@@ -25,6 +25,7 @@ def getTitle(q, url, chanID):
 
 logging.basicConfig(filename="linkbot0.log",format='%(asctime)s %(message)s', level=logging.DEBUG)
 operational = False
+private = False
 
 server = "dreamhack.se.quakenet.org"
 #server = "port80a.se.quakenet.org"
@@ -73,6 +74,11 @@ while 1:
 			logging.info("Joined channel %s", i)
 		operational = True
 
+	#Ignoring private messages
+	if message.find(nickname) != -1:
+		logging.info("Message was private")
+		private = True
+
 	if not q.empty():
 		print q.qsize()
 		while not q.empty():
@@ -87,7 +93,7 @@ while 1:
 			irc.send("PRIVMSG " + c +" :"+ m +" \n")
 
 	else:
-		if operational:
+		if operational and not private:
 			url = urlReg.findall(message)
 			if url:
 				for u in url:
@@ -98,3 +104,5 @@ while 1:
 					t.daemon = True
 					t.start()
 					#irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
+		else:
+			private = False
