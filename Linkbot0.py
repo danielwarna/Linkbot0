@@ -8,7 +8,7 @@ import logging
 from BeautifulSoup import BeautifulSoup
 
 
-def getTitle(q, url):
+def getTitle(q, url, chanID):
 	html = urllib2.urlopen(url).read()
 	soup = BeautifulSoup(html)
 	title = soup.title.string
@@ -21,7 +21,7 @@ def getTitle(q, url):
 		t = t + i
 	print url + " " + str(t.encode("utf-8"))
 	message = url + " " + str(t.encode("utf-8"))
-	q.put(message)
+	q.put((message, chanID))
 
 logging.basicConfig(filename="linkbot0.log",format='%(asctime)s %(message)s', level=logging.DEBUG)
 operational = False
@@ -29,7 +29,7 @@ operational = False
 server = "dreamhack.se.quakenet.org"
 #server = "port80a.se.quakenet.org"
 channel = "#hightech"
-channel = "#linkbot0"
+channels = ["#linkbot0", "#linkbot1"]
 nickname = "LinkBot1"
 
 q = Queue.Queue()
@@ -45,7 +45,6 @@ logging.info("Connected to server %s", server)
 irc.send("USER " + nickname + " " + nickname + " " + nickname + " :Linkbot\n")
 irc.send("NICK " + nickname + "\n")
 irc.send("PRIVMSG nickserv :NOOPE\r\n")
-#irc.send("JOIN " + channel + "\n")
 
 logging.info("User and nicknames set")
 
@@ -69,18 +68,23 @@ while 1:
 		logging.debug("PONG")
 	#Joining channels
 	if message.find("End of /MOTD command.") != -1:
-		irc.send("JOIN " + channel + "\n")
+		for i in channels:
+			irc.send("JOIN " + i + "\n")
+			logging.info("Joined channel %s", i)
 		operational = True
-		logging.info("Joined channels")
 
 	if not q.empty():
 		print q.qsize()
 		while not q.empty():
-			m = q.get()
+			t = q.get()
+			m = t[0]
+			c = channels[t[1]]
+
 			print "sending message " + m.rstrip(os.linesep)
-			logging.info("Sending message: PRIVMSG %s :%s", channel, m)
+			m = m.rstrip(os.linesep)
+			logging.info("Sending message: PRIVMSG %s :%s", c, m)
 			#irc.send("PRIVMSG " + channel +" :"+ m.encode('utf8') +" \n")
-			irc.send("PRIVMSG " + channel +" :"+ m +" \n")
+			irc.send("PRIVMSG " + c +" :"+ m +" \n")
 
 	else:
 		if operational:
@@ -88,7 +92,9 @@ while 1:
 			if url:
 				for u in url:
 					print "Found link " + u
-					t = threading.Thread(target=getTitle, args=(q, u.rstrip()))
+					chanID = channels.index(channelReg.findall(message)[0])
+					logging.info("Found link %s in %s", u, channels[chanID])
+					t = threading.Thread(target=getTitle, args=(q, u.rstrip(), chanID))
 					t.daemon = True
 					t.start()
 					#irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
