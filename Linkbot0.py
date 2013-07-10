@@ -21,6 +21,8 @@ def getTitle(q, url, chanID):
 		t = t + i
 	print url + " " + str(t.encode("utf-8"))
 	message = url + " " + str(t.encode("utf-8"))
+	if (len(message) > 65):
+		message = str(t.encode("utf-8"))
 	q.put((message, chanID))
 
 logging.basicConfig(filename="linkbot0.log",format='%(asctime)s %(message)s', level=logging.DEBUG)
