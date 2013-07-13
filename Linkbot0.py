@@ -9,6 +9,12 @@ from BeautifulSoup import BeautifulSoup
 
 
 def getTitle(q, url, chanID):
+	#Fetches title even when direct image link is posted
+	imgurPicOnlyReg = re.compile(r"(http://|https://)i\.imgur\.com/[^ ]+(\.jpg|\.png|\.gif)")
+	imgurPicOnly = imgurPicOnlyReg.findall(url)
+	if imgurPicOnly:
+		url=url[:-4]
+		
 	html = urllib2.urlopen(url).read()
 	soup = BeautifulSoup(html)
 	title = soup.title.string
@@ -19,10 +25,11 @@ def getTitle(q, url, chanID):
 	t = ""
 	for i in title:
 		t = t + i
-	print url + " " + str(t.encode("utf-8"))
-	message = url + " " + str(t.encode("utf-8"))
+	t = t.encode("utf-8").strip()
+	print url + " " + str(t)
+	message = url + " " + str(t)
 	if (len(message) > 65):
-		message = str(t.encode("utf-8"))
+		message = str(t)
 	q.put((message, chanID))
 
 logging.basicConfig(filename="linkbot0.log",format='%(asctime)s %(message)s', level=logging.DEBUG)
@@ -31,9 +38,9 @@ private = False
 
 server = "dreamhack.se.quakenet.org"
 #server = "port80a.se.quakenet.org"
-channel = "#hightech"
-channels = ["#linkbot0", "#linkbot1"]
-nickname = "LinkBot1"
+#channel = "#hightech"
+channels = ["#linkbot690", "#linkbot691"]
+nickname = "LinkBot69"
 
 q = Queue.Queue()
 
@@ -77,7 +84,7 @@ while 1:
 		operational = True
 
 	#Ignoring private messages
-	if message.find(nickname) != -1:
+	if len(message.split())>=3 and message.split()[2].find(nickname) != -1:
 		logging.info("Message was private")
 		private = True
 
