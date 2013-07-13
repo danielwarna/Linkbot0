@@ -31,9 +31,9 @@ private = False
 
 server = "dreamhack.se.quakenet.org"
 #server = "port80a.se.quakenet.org"
-channel = "#hightech"
-channels = ["#linkbot0", "#linkbot1"]
-nickname = "LinkBot1"
+#channel = "#hightech"
+channels = ["#linkbot690", "#linkbot691"]
+nickname = "LinkBot69"
 
 q = Queue.Queue()
 
@@ -77,7 +77,7 @@ while 1:
 		operational = True
 
 	#Ignoring private messages
-	if message.find(nickname) != -1:
+	if len(message.split())>=3 and message.split()[2].find(nickname) != -1:
 		logging.info("Message was private")
 		private = True
 
