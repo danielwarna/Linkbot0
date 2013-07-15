@@ -5,6 +5,7 @@ import urllib2
 import threading
 import os
 import logging
+import config
 from BeautifulSoup import BeautifulSoup
 
 
@@ -14,7 +15,7 @@ def getTitle(q, url, chanID):
 	imgurPicOnly = imgurPicOnlyReg.findall(url)
 	if imgurPicOnly:
 		url=url[:-4]
-		
+
 	html = urllib2.urlopen(url).read()
 	soup = BeautifulSoup(html)
 	title = soup.title.string
@@ -32,15 +33,16 @@ def getTitle(q, url, chanID):
 		message = str(t)
 	q.put((message, chanID))
 
-logging.basicConfig(filename="linkbot0.log",format='%(asctime)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=config.logFile, format='%(asctime)s %(message)s', level=logging.DEBUG)
+
 operational = False
 private = False
 
-server = "dreamhack.se.quakenet.org"
+server = config.server
 #server = "port80a.se.quakenet.org"
 #channel = "#hightech"
-channels = ["#linkbot690", "#linkbot691"]
-nickname = "LinkBot69"
+channels = config.channels
+nickname = config.nickname
 
 q = Queue.Queue()
 
