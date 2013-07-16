@@ -103,11 +103,12 @@ while 1:
 			#irc.send("PRIVMSG " + channel +" :"+ m.encode('utf8') +" \n")
 			irc.send("PRIVMSG " + c +" :"+ m +" \n")
 
-	else:
-		if operational and not private:
-			url = urlReg.findall(message)
-			if url:
-				for u in url:
+
+	if operational and not private:
+		url = urlReg.findall(message)
+		if url:
+			for u in url:
+				try:
 					print "Found link " + u
 					chanID = channels.index(channelReg.findall(message)[0])
 					logging.info("Found link %s in %s", u, channels[chanID])
@@ -115,5 +116,9 @@ while 1:
 					t.daemon = True
 					t.start()
 					#irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
-		else:
-			private = False
+				
+				except:
+					logging.info("Couldn't parse message %s", message)
+				
+	else:
+		private = False
