@@ -16,7 +16,7 @@ class LinkBot:
 		self.channels = config.channels
 		self.nickname = config.nickname
 
-		self.q = Queue.Queue()
+		#self.q = Queue.Queue()
 
 		self.urlReg = re.compile(r"(http://[^ ]+|https://[^ ]+)")
 		self.channelReg = re.compile(r"(#[^ ]+)")
@@ -58,17 +58,17 @@ class LinkBot:
 				logging.info("Message was private")
 				private = True
 
-			if not self.q.empty():
-				while not self.q.empty():
-					t = self.q.get()
-					mess = t[0]
-					chan = self.channels[t[1]]
+			# if not self.q.empty():
+			# 	while not self.q.empty():
+			# 		t = self.q.get()
+			# 		mess = t[0]
+			# 		chan = self.channels[t[1]]
 
-					print "sending message " + mess.rstrip(os.linesep)
-					mess = mess.rstrip(os.linesep)
-					logging.info("Sending message: PRIVMSG %s :%s", chan, mess)
-					#self.irc.send("PRIVMSG " + channel +" :"+ mess.encode('utf8') +" \n")
-					self.irc.send("PRIVMSG " + chan +" :"+ mess +" \n")
+			# 		print "sending message " + mess.rstrip(os.linesep)
+			# 		mess = mess.rstrip(os.linesep)
+			# 		logging.info("Sending message: PRIVMSG %s :%s", chan, mess)
+			# 		#self.irc.send("PRIVMSG " + channel +" :"+ mess.encode('utf8') +" \n")
+			# 		self.irc.send("PRIVMSG " + chan +" :"+ mess +" \n")
 
 			else:
 				if self.operational and not private:
@@ -134,7 +134,8 @@ class LinkBot:
 		message = url + " " + str(t)
 		if (len(message) > 65):
 			message = str(t)
-		q.put((message, chanID))
+		self.irc.send("PRIVMSG " + self.channels[chanID] + " : " + message +"\r\n")
+		#self.q.put((message, chanID))
 
 
 if __name__ == "__main__":
