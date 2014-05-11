@@ -137,3 +137,6 @@ class LinkBot:
 		q.put((message, chanID))
 
 
+if __name__ == "__main__":
+	bot = LinkBot()
+	bot.run()
