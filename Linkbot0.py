@@ -21,7 +21,7 @@ class LinkBot:
 		self.urlReg = re.compile(r"(http://[^ ]+|https://[^ ]+)")
 		self.channelReg = re.compile(r"(#[^ ]+)")
 
-		self.operational = True
+		self.operational = False
 
 		logging.basicConfig(filename=config.logFile, format='%(asctime)s %(message)s', level=logging.DEBUG)
 
@@ -30,71 +30,59 @@ class LinkBot:
 		self.connect()
 		self.running = True
 
-		private = False
-
 		while self.running:
 			try:
 				message = self.irc.recv(2040)
-				print message
+				message = message.strip('\n\r')
 				logging.info("Recieved message: %s", message)
-			except Exception, e:
-				print e
-				message = ""
+				if message != "":
+					self.handleMessage(message)
+			except socket.gaierror:
+				logging.warning("Connection lost, trying to reconnect")
+				time.sleep(60)
+				self.connect()
 
-			#PingPong
-			if message.find("PING") != -1:
-				self.irc.send("PONG " + message.split()[1] + "\r\n")
-				logging.debug("PONG")
+	def handleMessage(self, message):
+		private = False
+		
+		#PingPong
+		if message.find("PING") != -1:
+			self.irc.send("PONG " + message.split()[1] + "\r\n")
+			logging.debug("PONG")
 
-			#Joining channels
-			if message.find("End of /MOTD command.") != -1:
-				for i in self.channels:
-					self.irc.send("JOIN " + i + "\n")
-					logging.info("Joined channel %s", i)
-				operational = True
+		#Joining channels
+		if message.find("End of /MOTD command.") != -1:
+			for i in self.channels:
+				self.irc.send("JOIN " + i + "\n")
+				logging.info("Joined channel %s", i)
+			self.operational = True
 
-			#Ignoring private messages
-			if len(message.split())>=3 and message.split()[2].find(self.nickname) != -1:
-				logging.info("Message was private")
-				private = True
+		#Ignoring private messages
+		if len(message.split())>=3 and message.split()[2].find(self.nickname) != -1:
+			logging.info("Message was private")
+			private = True
 
-			# if not self.q.empty():
-			# 	while not self.q.empty():
-			# 		t = self.q.get()
-			# 		mess = t[0]
-			# 		chan = self.channels[t[1]]
-
-			# 		print "sending message " + mess.rstrip(os.linesep)
-			# 		mess = mess.rstrip(os.linesep)
-			# 		logging.info("Sending message: PRIVMSG %s :%s", chan, mess)
-			# 		#self.irc.send("PRIVMSG " + channel +" :"+ mess.encode('utf8') +" \n")
-			# 		self.irc.send("PRIVMSG " + chan +" :"+ mess +" \n")
-
-			else:
-				if self.operational and not private:
-					url = self.urlReg.findall(message)
-					if url:
-						for u in url:
-							try:
-								print "Found link " + u
-								chanID = self.channels.index(self.channelReg.findall(message)[0])
-								logging.info("Found link %s in %s", u, self.channels[chanID])
-								t = threading.Thread(target=self.getTitle, args=(u.rstrip(), chanID))
-								t.daemon = True
-								t.start()
-								#self.irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
-							
-							except:
-								logging.info("Couldn't parse message %s", message)
-				
-				else:
-					private = False
+		if self.operational and not private:
+			url = self.urlReg.findall(message)
+			if url:
+				for u in url:
+					try:
+						print "Found link " + u
+						chanID = self.channels.index(self.channelReg.findall(message)[0])
+						logging.info("Found link %s in %s", u, self.channels[chanID])
+						t = threading.Thread(target=self.getTitle, args=(u.rstrip(), chanID))
+						t.daemon = True
+						t.start()
+						#self.irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
+					
+					except:
+						logging.info("Couldn't parse message %s", message)
 
 
 	def connect(self):
 		try:
 			self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.irc.settimeout(4)
+			self.irc.settimeout(60)
 
 			self.irc.connect((self.server, 6667))
 
