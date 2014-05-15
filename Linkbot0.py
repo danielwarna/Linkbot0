@@ -16,6 +16,8 @@ class LinkBot:
 		self.channels = config.channels
 		self.nickname = config.nickname
 
+		self.operational = True
+
 		#self.q = Queue.Queue()
 
 		self.urlReg = re.compile(r"(http://[^ ]+|https://[^ ]+)")
@@ -37,14 +39,12 @@ class LinkBot:
 				logging.info("Recieved message: %s", message)
 				if message != "":
 					self.handleMessage(message)
-			except socket.gaierror:
+			except socket.timeout:
 				logging.warning("Connection lost, trying to reconnect")
-				time.sleep(60)
+				time.sleep(20)
 				self.connect()
 
-	def handleMessage(self, message):
-		private = False
-		
+	def handleMessage(self, message):		
 		#PingPong
 		if message.find("PING") != -1:
 			self.irc.send("PONG " + message.split()[1] + "\r\n")
@@ -62,27 +62,38 @@ class LinkBot:
 			logging.info("Message was private")
 			private = True
 
-		if self.operational and not private:
+		if self.operational:
+			self.urlScan(message)
+
+
+	def urlScan(self, message):
+		private = False
+		#Ignoring private messages
+		if len(message.split())>=3 and message.split()[2].find(self.nickname) != -1:
+			logging.info("Message was private")
+			private = True
+
+		if not private:
 			url = self.urlReg.findall(message)
-			if url:
-				for u in url:
-					try:
-						print "Found link " + u
-						chanID = self.channels.index(self.channelReg.findall(message)[0])
-						logging.info("Found link %s in %s", u, self.channels[chanID])
-						t = threading.Thread(target=self.getTitle, args=(u.rstrip(), chanID))
-						t.daemon = True
-						t.start()
-						#self.irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
-					
-					except:
-						logging.info("Couldn't parse message %s", message)
+			#if url:
+			for u in url:
+				try:
+					print "Found link " + u
+					chanID = self.channels.index(self.channelReg.findall(message)[0])
+					logging.info("Found link %s in %s", u, self.channels[chanID])
+					t = threading.Thread(target=self.getTitle, args=(u.rstrip(), chanID))
+					t.daemon = True
+					t.start()
+					#self.irc.send("PRIVMSG " + channel +" :"+ "Found url: " +u +"\n")
+				
+				except:
+					logging.info("Couldn't parse message %s", message)
 
 
 	def connect(self):
 		try:
 			self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.irc.settimeout(60)
+			self.irc.settimeout(60*4)
 
 			self.irc.connect((self.server, 6667))
 
