@@ -4,8 +4,7 @@ Linkbot0 is a IRC-bot that shows people what's behind the a link by saying the t
 
 
 ## Configuration
-
-The following values can be set in the configuration file; 'config.py'.
+The following values can be set in the configuration file; `config.py`.
 
     server = "Server Address"
     channels = ["#Channel1", "#Channel2", "#Channel3"]
@@ -14,4 +13,4 @@ The following values can be set in the configuration file; 'config.py'.
 
 ## Usage
 - Install dependencies by running pip install -r requirements.txt
-- Run with python 'python Linkbot0.py'
+- Run with python `python Linkbot0.py`
